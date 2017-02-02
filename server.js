@@ -40,14 +40,7 @@ app.listen(port, function () {
 });
 
 app.get('/setup', function (req, res) {
-    var FirstMovie = new Films({
-        Name: 'Source Code',
-        Hero: 'Doople ganger'
-    });
-    FirstMovie.save(function (err) {
-        if (err) throw err;
-        console.log('Movie Added successfully');
-    });
+
 
     // create a sample user
     var mk = new User({
@@ -72,7 +65,7 @@ app.get('/', function (req, res) {
 
 var apiRouter = express.Router();
 
-apiRouter.get('/', function (req, res) {
+apiRouter.get('/movies', function (req, res) {
     Films.find({}, function (err, results) {
         if (err) {
             res.json({
@@ -83,6 +76,9 @@ apiRouter.get('/', function (req, res) {
         }
     });
 });
+var objectId = require('mongodb').ObjectId;
+
+
 
 apiRouter.post('/authenticate', function (req, res) {
     User.findOne({
@@ -112,16 +108,15 @@ apiRouter.post('/authenticate', function (req, res) {
                 //  console.log(req.session.token);
                 // return the information including token as JSON
                 res.json({
+
                     success: true,
-                    message: 'Enjoy your token!',
+                    message: "Hello  " + req.body.name,
                     token: token
                 });
             }
         }
     });
 });
-
-
 apiRouter.use(function (req, res, next) {
 
     // check header or url parameters or post parameters for token
@@ -155,6 +150,11 @@ apiRouter.use(function (req, res, next) {
 
     }
 });
+
+
+
+
+
 apiRouter.get('/users', function (req, res) {
     User.find({}, function (err, users) {
         if (err) {
@@ -167,21 +167,35 @@ apiRouter.get('/users', function (req, res) {
     });
 });
 
-app.get('/logout', function (req, res) {
-    cookie = req.cookies;
-    console.log(cookie);
-    for (var prop in cookie) {
-        if (!cookie.hasOwnProperty(prop)) {
-            continue;
-        }
-        res.cookie(prop, '', {
-            expires: new Date(0)
-        });
-    }
 
+app.get('/logout', function (req, res) {
+    function deleteAllCookies() {
+        var cookies = document.cookie.split(";");
+
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
+    }
+    res.json({
+        message: "Logout Sucessfully"
+    });
 
 });
-
-
+apiRouter.get('/movies/:id', function (req, res) {
+    Films.find({
+        Name: req.params.id
+    }, function (err, results) {
+        if (err) {
+            res.json({
+                message: "Wrong Movie Id"
+            });
+        } else {
+            res.json(results);
+        }
+    })
+});
 
 app.use('/api', apiRouter);
